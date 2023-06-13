@@ -9,6 +9,7 @@ import Icons from 'unplugin-icons/vite';
 import IconsResolver from 'unplugin-icons/resolver';
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
 
+import UnoCSS from 'unocss/vite';
 
 import path from "path";
 const pathSrc = path.resolve(__dirname, "src");
@@ -22,6 +23,27 @@ export default ({ mode }: ConfigEnv): UserConfig => {
         "@": pathSrc,
       },
     },
+		css: {
+			// css预处理器
+			preprocessorOptions: {
+				scss: {
+					javascriptEnabled: true,
+					additionalData: `@use "@/styles/variables.scss" as *;`
+				}
+			}
+		},
+		server: {
+			port: +env.VITE_APP_PORT,
+			proxy: {
+				// 表面肉眼看到的请求地址: http://localhost:3000/dev-api/api/v1/users/me
+				// 真实访问的代理目标地址: http://vapi.youlai.tech/api/v1/users/me
+				[env.VITE_APP_BASE_API]: {
+					target: 'http://vapi.youlai.tech',
+					changeOrigin: true,
+					rewrite: path => path.replace(new RegExp('^' + env.VITE_APP_BASE_API), '')
+				}
+			}
+		},
     plugins: [
       vue(),
       AutoImport({
@@ -55,6 +77,7 @@ export default ({ mode }: ConfigEnv): UserConfig => {
         // 自动安装图标库
         autoInstall: true,
       }),
+			UnoCSS({/* options */}),
 			createSvgIconsPlugin({
 				// 指定需要缓存的图标文件夹
 				iconDirs: [path.resolve(pathSrc, 'assets/icons')],
